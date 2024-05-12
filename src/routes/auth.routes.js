@@ -5,16 +5,18 @@ import {
     logout,
     profile
 } from "../controllers/auth.controllers.js";
-import { validateToken } from "../middlewares/validateToken.js";
+import { authorization } from "../middlewares/auth.middleware.js";
+import { validateSchema } from "../middlewares/validator.middleware.js";
+import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
 
 const router = express.Router();
 
-router.post("/api/register", register); //
+router.post("/register", validateSchema(registerSchema), register); //
 
-router.post("/api/login", login);
+router.post("/login", validateSchema(loginSchema), login);
 
-router.post("/api/logout", logout);
+router.post("/logout", logout);
 
-router.get("/api/profile", validateToken, profile);
+router.get("/profile", authorization, profile);
 
 export default router;

@@ -1,0 +1,9 @@
+{
+  "email": "goku96_2@hotmail.com",
+  "password": "GyroZeppeli89_2"
+}
+
+{
+  "email": "gonzaloemurua@hotmail.com",
+  "password": "@Zeppeli89"
+}

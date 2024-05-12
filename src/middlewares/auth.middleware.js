@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config/config.js";
 
-export const validateToken = (req, res, next) => {
+export const authorization = (req, res, next) => {
     const { token } = req.cookies;
     console.log(token);
     if(!token) res.status(401).json({ message: "Not token. Not authorized."});
