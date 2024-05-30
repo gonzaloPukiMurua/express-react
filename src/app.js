@@ -18,8 +18,7 @@ app.set("port", PORT);
 //Middlewares
 app.use(
     cors({
-      credentials: true,
-      origin: FRONTEND_URL,
+      origin: "http://127.0.0.1:5173",
     })
   );
   app.use(express.json());
@@ -27,7 +26,7 @@ app.use(
   app.use(cookieParser());
 
   //Routes
-  app.use("/api/auth", authRouter);
+  app.use("/api", authRouter);
   app.use("/api", productsRouter);
   app.use("/api", taskRouter);
   export default app;

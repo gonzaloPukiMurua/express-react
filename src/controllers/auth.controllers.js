@@ -6,7 +6,10 @@ export const register = async (req, res) => {
     
     const {username, email, password} = req.body;
     console.log (username, " | ", email, " | ", password);
+
     try{
+        const userFound = await User.findOne({email});
+        if(userFound) return res.status(400).json({ message: "Email already exists."})
         const hashPassword = await bcryptjs.hash(password, 10); // Hashing password
         const newUser = new User({
             username, 

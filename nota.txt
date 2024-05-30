@@ -7,3 +7,9 @@
   "email": "gonzaloemurua@hotmail.com",
   "password": "@Zeppeli89"
 }
+
+{
+  "username": "Luisa Maria",
+  "email": "luuferrari56@gmail.com",
+  "password": "Pukifeo"
+}
