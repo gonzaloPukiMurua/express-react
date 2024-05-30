@@ -1,6 +1,8 @@
 import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import { createAccessToken } from "../helpers/jwt.js";
+import jwt from "jsonwebtoken";
+import { TOKEN_SECRET } from "../config/config.js";
 
 export const register = async (req, res) => {
     
@@ -20,7 +22,11 @@ export const register = async (req, res) => {
         const savedUser = await newUser.save(); //Saving user in DB
         const token = await createAccessToken({ id: savedUser._id }); //Creating token
         console.log(token);
-        res.cookie( "token", token);
+        res.cookie( "token", token, {
+            sameSite: "none",
+            secure: true,
+            httpOnly: false
+        });
         res.json({ message: "Usuario creado." });
 
     }catch(e){
@@ -69,5 +75,20 @@ export const profile = async (req, res) => {
         email: userToFind.email,
         createdAt: userToFind.createdAt,
         updatedAt: userToFind.updatedAt
+    });
+}
+
+export const verifyToken = async (req, res) => {
+    const {token} = req.cookies;
+    if(!token) return res.status(401).json({message: "Not authorized."});
+    jwt.verify(token, TOKEN_SECRET, async (err, user) => {
+        if(err) return res.status(401).json({message: "Not authorized."});
+        const userFound = await User.findById(user.id);
+        if(!userFound) return res.status(401).json({message: "Not authorized."});
+        return res.json({
+            id: userFound._id,
+            username: userFound.username,
+            email: userFound.email
+        });
     });
 }

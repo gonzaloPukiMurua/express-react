@@ -8,6 +8,9 @@ import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
+import TaskFormPage from "./pages/TaskFormPage";
+import ProfilePage from "./pages/ProfilePage";
+import TaskPage from "./pages/TaskPage";
 
 
 function App() {
@@ -21,10 +24,10 @@ function App() {
           <Route path="/register" element={<RegisterPage/>}/>          
         
           <Route element={<ProtectedRoute/>}>
-            <Route path="/tasks" element={<h1>Tasks page</h1>}/>
-            <Route path="/add-task" element={<h1>New task</h1>}/>
-            <Route path="/tasks/:id" element={<h1>Update task</h1>}/>
-            <Route path="/profile" element={<h1>Home Page</h1>}/>
+            <Route path="/tasks" element={<TaskPage/>}/>
+            <Route path="/add-task" element={<TaskFormPage/>}/>
+            <Route path="/tasks/:id" element={<TaskFormPage/>}/>
+            <Route path="/profile" element={<ProfilePage/>}/>
           </Route>
         </Routes>
       </BrowserRouter>
