@@ -46,6 +46,7 @@ export const login =  async (req, res) => {
         
         const token = await createAccessToken( {id: userToFind._id});
         res.cookie("token", token);
+        console.log(token);
         res.json({
             id: userToFind._id,
             username: userToFind.username,
@@ -82,6 +83,7 @@ export const verifyToken = async (req, res) => {
     const {token} = req.cookies;
     if(!token) return res.status(401).json({message: "Not authorized."});
     jwt.verify(token, TOKEN_SECRET, async (err, user) => {
+        console.log("Verifying token.")
         if(err) return res.status(401).json({message: "Not authorized."});
         const userFound = await User.findById(user.id);
         if(!userFound) return res.status(401).json({message: "Not authorized."});
