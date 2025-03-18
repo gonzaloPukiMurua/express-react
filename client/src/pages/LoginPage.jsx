@@ -1,46 +1,41 @@
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
 
-function LoginPage(){
+export function LoginPage() {
+  const { register, handleSubmit } = useForm();
+  const { signin, errors } = useAuth();
 
-    const {
-        register,
-        handleSubmit,
-        formState: errors
-    } = useForm()
-    const {signin, errors: signinErrors} = useAuth();
+  const onSubmit = (data) => {
+    console.log(data);
+    signin(data);
+  };
 
-    const onSubmit = handleSubmit((data) => {
-        signin(data)
-    })
-
-    return(
-        <div className="flex h-[calc(100vh - 100px)] items-center justify-center">
-            <div className="bg-zinc-800 max-w-md w-full p-10 rounded-md">
-                {
-                    signinErrors.map((error, i) => (
-                        <div className="bg-red-500 p-2 text-white" key={i}>
-                        {error}
-                        </div>
-                    ))
-                }
-                <h1 className="text-2xl font-bold">Login</h1>
-                <form onSubmit={onSubmit}>               
-                    <input type="email" {...register("email", { required: true })}
-                    className="w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2"
-                    placeholder="Email."
-                    />
-                    {errors.email && (<p className = "text-red-500" >Email is required.</p>)}
-                    <input type="password" {...register("password", { required: true })}
-                    className="w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2"
-                    placeholder="password."
-                    />
-                    {errors.password && (<p className = "text-red-500" >Password is required.</p>)}
-                    <button type="submit">Register</button>
-                </form>
-            </div>            
-        </div>        
-    )
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white p-8 rounded shadow-md w-80"
+      >
+        <h1 className="text-2xl font-bold mb-4">Login</h1>
+        {errors.map((err, i) => (
+          <p key={i} className="text-red-500 text-sm mb-2">{err}</p>
+        ))}
+        <input
+          type="email"
+          {...register("email")}
+          placeholder="Email"
+          className="input mb-4"
+        />
+        <input
+          type="password"
+          {...register("password")}
+          placeholder="Password"
+          className="input mb-4"
+        />
+        <button type="submit" className="btn-primary w-full">
+          Login
+        </button>
+      </form>
+    </div>
+  );
 }
-
-export default LoginPage;

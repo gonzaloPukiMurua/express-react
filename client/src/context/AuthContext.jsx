@@ -1,98 +1,98 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { registerRequest, loginRequest, verifyTokenRequest } from "../api/auth.js";
-import Cookies from "js-cookie";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { loginRequest, registerRequest, verifyTokenRequest } from "../api/auth";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
+import jwtDecodeModule from "jwt-decode";
 
-export const AuthContext = createContext();
+const jwtDecode = jwtDecodeModule.default || jwtDecodeModule; // Compatibilidad asegurada
+
+const AuthContext = createContext();
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if(!context) throw new Error("useAuth must be used within an AuthProvider.")
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
 };
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [errors, setErrors] = useState([]);
-    const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [userValidated, setUserValidated] = useState(false);
+  const [errors, setErrors] = useState([]);
+  const navigate = useNavigate();
 
-    const signup = async (user) => {
-        try{
-            console.log(user);
-            const res = await registerRequest(user);
-            console.log(res.data);
-            setUser(res.data);
-            setIsAuthenticated(true);
-        }catch(error){
-            console.error(error.responde.data);
-            setErrors(error.response.data);
-        }        
-    };
-
-    const signin = async (user) => {
-        try {
-            const res = await loginRequest(user); 
-            console.log("Realizando logueo.")   
-            console.log(res);
-            setIsAuthenticated(true);
-        } catch (error) {
-            console.error(error);
-            setErrors(error.response.data);
-        }
-        
+  useEffect(() => {
+    if (errors.length > 0) {
+      const timer = setTimeout(() => {
+        setErrors([]);
+      }, 5000);
+      return () => clearTimeout(timer);
     }
+  }, [errors]);
 
-    useEffect(() => {
-        if(errors.length > 0){
-            const timer = setTimeout(() => {
-                setErrors([])
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [errors]);
+  const signin = async (credentials) => {
+    try {
+      const response = await loginRequest(credentials);
+      const { accessToken } = response.data;
+      localStorage.setItem("token", accessToken);
+      
+      const decodedUser = jwtDecode(accessToken);
+      console.log("Estoy en authcontext signin", decodedUser);
+      if (!decodedUser.roles) {
+        throw new Error("El token no contiene un rol válido");
+      }
+      
+      setUser(decodedUser);
+      setUserValidated(true);
+      navigate("/");
+    } catch (error) {
+      setErrors([error.response?.data?.message || "Error en el inicio de sesión"]);
+    }
+  };
 
-    useEffect(() => {
+  const signup = async (data) => {
+    try {
+      await registerRequest(data);
+      navigate("/login"); // Redirige al Login después de registrar
+    } catch (error) {
+      setErrors([error.response?.data?.message || "Error al registrar"]);
+    }
+  };
 
-        const checkLogin = async () => {
-            const cookies = Cookies.get();
-            console.log("UseEffect realizandose.")
-            console.log(cookies.token);
-            if(!cookies.token){
-                setIsAuthenticated(false); 
-                setLoading(false);              
-                return;
-            }
-            try {
-                const res = await verifyTokenRequest(cookies.token);
-                console.log("Verificando Token.\nDatos del usuario: ");
-                console.log(res.data);
-                if(!res.data) return setIsAuthenticated(false);
-                setIsAuthenticated(true);
-                setUser(res.data);    
-                setLoading(false);
-            }catch (error) {
-                setIsAuthenticated(false);
-                setLoading(false);
-                console.log(error);
-            }
-        };
-        checkLogin();       
-    }, []);
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    api.defaults.headers.common["Authorization"] = null;
+    setUser(null);
+    setUserValidated(false);
+    navigate("/login");
+  }, [navigate]);
 
-    return (
-        <AuthContext.Provider 
-            value={{
-                signup,
-                signin,
-                user,
-                isAuthenticated,
-                errors,
-                loading
-            }}
-        >
-                {children}
-        </AuthContext.Provider>
-    );
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("token");
+  
+      if (!token) {
+        logout();
+        return;
+      }
+  
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  
+      try {
+        const { data } = await verifyTokenRequest(); // Petición al backend
+        setUser(data.user); // Suponiendo que el backend devuelve los datos del usuario
+        setUserValidated(true);
+      } catch (error) {
+        console.error("Token inválido o expirado", error);
+        logout(); // Si falla, cerramos sesión
+      }
+    };
+  
+    verifyToken();
+  }, [logout]);
+
+  return (
+    <AuthContext.Provider value={{ signin, signup, logout, user, errors, userValidated }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-
-export default AuthContext;
