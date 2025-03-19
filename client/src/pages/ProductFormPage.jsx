@@ -45,10 +45,17 @@ const Form = styled.form`
   }
 `;
 
+const ErrorMessage = styled.div`
+  color: red;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+`;
+
 export function ProductFormPage() {
-  const { id } = useParams();
+  const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { getProduct, updateProduct, createProduct } = useProducts();
+  const { getProduct, updateProduct, createProduct, productErrors, setProductErrors, setProducts } = useProducts();
+  
   const [product, setProduct] = useState({
     name: "",
     price: "",
@@ -56,16 +63,20 @@ export function ProductFormPage() {
     category: "",
   });
   const [imageFile, setImageFile] = useState(null);
+  const [id, setId] = useState(paramId || null);
 
   useEffect(() => {
-    if (id) {
+    if (paramId) {
       const fetchProduct = async () => {
-        const data = await getProduct(id);
-        setProduct(data);
+        const data = await getProduct(paramId);
+        if (data) {
+          setProduct(data);
+          setId(paramId);
+        }
       };
       fetchProduct();
     }
-  }, [id, getProduct]);
+  }, [paramId, getProduct]);
 
   const handleChange = (e) => {
     setProduct({ ...product, [e.target.name]: e.target.value });
@@ -77,27 +88,34 @@ export function ProductFormPage() {
       setImageFile(file);
     } else {
       alert("Please upload a valid image (JPG/PNG, max 200KB).");
-      e.target.value = null; // Reset input
+      e.target.value = null;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    let imageUrl = product.imageUrl;
-    if (imageFile) {
-      try {
-        const uploadResponse = await uploadImage(imageFile, id);
-        imageUrl = uploadResponse.data.product.imageUrl;
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        return;
-      }
-    }
-  
-    const updatedProduct = { ...product, imageUrl };
+    setProductErrors([]); 
+
     try {
-      id ? await updateProduct(id, updatedProduct) : await createProduct(updatedProduct);
+      let productId = id;
+
+      if (!productId) {
+        // 🚀 Crear producto y obtener su ID
+        const createdProduct = await createProduct(product);
+        if (!createdProduct) throw new Error("Error creating product.");
+        productId = createdProduct.id;
+        setId(productId);
+        setProducts((prev) => [...prev, createdProduct]);
+      } else {
+        // 🛠 Actualizar producto
+        await updateProduct(productId, product);
+      }
+
+      // 📸 Si hay imagen, subirla después de crear/actualizar
+      if (imageFile) {
+        await uploadImage(imageFile, productId);
+      }
+
       navigate("/products");
     } catch (error) {
       console.error("Error saving product:", error);
@@ -107,35 +125,22 @@ export function ProductFormPage() {
   return (
     <FormContainer>
       <h2>{id ? "Editar Producto" : "Crear Producto"}</h2>
+      {productErrors.length > 0 && (
+        <ErrorMessage>
+          {productErrors.map((error, index) => (
+            <p key={index}>{error}</p>
+          ))}
+        </ErrorMessage>
+      )}
       <Form onSubmit={handleSubmit}>
         <label>Nombre:</label>
-        <input
-          type="text"
-          name="name"
-          value={product.name}
-          onChange={handleChange}
-        />
+        <input type="text" name="name" value={product.name} onChange={handleChange} />
         <label>Precio:</label>
-        <input
-          type="number"
-          name="price"
-          value={product.price}
-          onChange={handleChange}
-        />
+        <input type="number" name="price" value={product.price} onChange={handleChange} />
         <label>Stock:</label>
-        <input
-          type="number"
-          name="stock"
-          value={product.stock}
-          onChange={handleChange}
-        />
+        <input type="number" name="stock" value={product.stock} onChange={handleChange} />
         <label>Categoría:</label>
-        <input
-          type="text"
-          name="category"
-          value={product.category}
-          onChange={handleChange}
-        />
+        <input type="text" name="category" value={product.category} onChange={handleChange} />
         <label>Imagen (JPG o PNG, máx 200KB):</label>
         <input type="file" accept="image/jpeg,image/png" onChange={handleImageChange} />
         <button type="submit">Guardar</button>
