@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import {
   createCategoryRequest,
   getCategoriesRequest,
@@ -20,14 +20,14 @@ export const useCategories = () => {
 export const CategoryProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
 
-  const getCategories = async () => {
+  const getCategories = useCallback(async () => {
     try {
       const { data } = await getCategoriesRequest();
-      setCategories(data);
+      setCategories(data.categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
-  };
+  }, []); // 👈 useCallback evita que cambie en cada render
 
   const getCategory = async (id) => {
     try {

@@ -40,6 +40,10 @@ export function ProductPage() {
     };
     fetchProduct();
   }, [id, getProduct]);
+  
+  useEffect(() => {
+    console.log("Producto actualizado:", product);
+  }, [product]);
 
   if (!product) {
     return <p>Cargando producto...</p>;
@@ -51,7 +55,7 @@ export function ProductPage() {
       <h2>{product.name}</h2>
       <p><strong>Precio:</strong> ${product.price}</p>
       <p><strong>Stock:</strong> {product.stock}</p>
-      <p><strong>Categoría:</strong> {product.category}</p>
+      <p><strong>Categoría:</strong> {typeof product.category === "string" ? product.category : JSON.stringify(product.category)}</p>
       <p><strong>Descripción:</strong> {product.description || "Sin descripción"}</p>
     </ProductContainer>
   );

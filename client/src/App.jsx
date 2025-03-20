@@ -17,6 +17,7 @@ import { Unauthorized } from "./pages/Unauthorized.jsx";
 import { UserProvider } from "./context/UsersContext.jsx";
 import { ProductsPage } from "./pages/ProductsPage.jsx";
 import { ProductProvider } from "./context/ProductContext.jsx";
+import { CategoryProvider } from "./context/CategoryContext.jsx";
 
 function App() {
   console.log("Estoy en App.jsx");
@@ -25,6 +26,7 @@ function App() {
     <UserProvider>
 
       <ProductProvider>
+      <CategoryProvider>
       <AuthProvider>
         <OrderProvider>
           <Navbar />
@@ -53,6 +55,7 @@ function App() {
           </Routes>
         </OrderProvider>
       </AuthProvider>
+      </CategoryProvider>
       </ProductProvider>
       </UserProvider>
     </BrowserRouter>

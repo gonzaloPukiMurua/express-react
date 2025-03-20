@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProducts } from "../context/ProductContext";
+import { useCategories } from "../context/CategoryContext";
 import { uploadImage } from "../api/file";
 import styled from "styled-components";
 
@@ -22,7 +23,7 @@ const Form = styled.form`
     font-weight: bold;
   }
 
-  input {
+  input, select, textarea {
     margin-bottom: 20px;
     padding: 10px;
     font-size: 1rem;
@@ -55,17 +56,22 @@ export function ProductFormPage() {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const { getProduct, updateProduct, createProduct, productErrors, setProductErrors, setProducts } = useProducts();
-  
+  const { categories, getCategories } = useCategories();
+
   const [product, setProduct] = useState({
     name: "",
-    price: "",
-    stock: "",
+    price: 0,
+    stock: 0,
     category: "",
+    description: "Inserte aquí una descripción",
   });
+
   const [imageFile, setImageFile] = useState(null);
   const [id, setId] = useState(paramId || null);
 
   useEffect(() => {
+    getCategories(); // Cargar las categorías al montar el componente
+
     if (paramId) {
       const fetchProduct = async () => {
         const data = await getProduct(paramId);
@@ -76,10 +82,14 @@ export function ProductFormPage() {
       };
       fetchProduct();
     }
-  }, [paramId, getProduct]);
+  }, []);
 
   const handleChange = (e) => {
-    setProduct({ ...product, [e.target.name]: e.target.value });
+    setProduct({
+      ...product,
+      [e.target.name]: 
+        e.target.type === "number" ? Number(e.target.value) : e.target.value
+    });
   };
 
   const handleImageChange = (e) => {
@@ -94,25 +104,28 @@ export function ProductFormPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setProductErrors([]); 
+    setProductErrors([]);
 
     try {
       let productId = id;
 
       if (!productId) {
-        // 🚀 Crear producto y obtener su ID
+        console.log("Si no existe el producto, este debería verse aquí: ", product)
         const createdProduct = await createProduct(product);
-        if (!createdProduct) throw new Error("Error creating product.");
+        console.log("El producto creado es: ", createdProduct);
+        if (!createdProduct || !createdProduct.id) {
+          console.error("Error: El producto creado no tiene ID.");
+          throw new Error("Error creating product.");
+        }
         productId = createdProduct.id;
         setId(productId);
         setProducts((prev) => [...prev, createdProduct]);
       } else {
-        // 🛠 Actualizar producto
         await updateProduct(productId, product);
       }
 
-      // 📸 Si hay imagen, subirla después de crear/actualizar
       if (imageFile) {
+        console.log("Esta es la iamgen cargada: ",imageFile)
         await uploadImage(imageFile, productId);
       }
 
@@ -135,14 +148,27 @@ export function ProductFormPage() {
       <Form onSubmit={handleSubmit}>
         <label>Nombre:</label>
         <input type="text" name="name" value={product.name} onChange={handleChange} />
+        
         <label>Precio:</label>
         <input type="number" name="price" value={product.price} onChange={handleChange} />
+        
         <label>Stock:</label>
         <input type="number" name="stock" value={product.stock} onChange={handleChange} />
+        
         <label>Categoría:</label>
-        <input type="text" name="category" value={product.category} onChange={handleChange} />
+        <select name="category" value={product.category} onChange={handleChange}>
+          <option value="">Seleccione una categoría</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.name}>{cat.name}</option>
+          ))}
+        </select>
+        
+        <label>Descripción:</label>
+        <textarea name="description" value={product.description} onChange={handleChange} />
+
         <label>Imagen (JPG o PNG, máx 200KB):</label>
         <input type="file" accept="image/jpeg,image/png" onChange={handleImageChange} />
+        
         <button type="submit">Guardar</button>
       </Form>
     </FormContainer>

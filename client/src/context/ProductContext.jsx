@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import {
   createProductRequest,
   getProductsRequest,
@@ -21,7 +21,7 @@ export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [productErrors, setProductErrors] = useState([]);
 
-  const getProducts = async () => {
+  const getProducts = useCallback(async () => {
     try {
       const { data } = await getProductsRequest();
       setProducts(data);
@@ -30,9 +30,9 @@ export const ProductProvider = ({ children }) => {
       console.error("Error fetching products:", error);
       setProductErrors(error.response?.data?.message || "Error fetching products");
     }
-  };
+  }, []);
 
-  const getProduct = async (id) => {
+  const getProduct = useCallback(async (id) => {
     try {
       const { data } = await getProductRequest(id);
       setProductErrors([]);
@@ -41,13 +41,16 @@ export const ProductProvider = ({ children }) => {
       console.error("Error fetching product:", error);
       setProductErrors(error.response?.data?.message || "Error fetching product");
     }
-  };
+  }, []);
 
   const createProduct = async (product) => {
     try {
+      console.log("Estamos en product context createProduct, desde el form vino: ", product);
       const { data } = await createProductRequest(product);
+      console.log("El producto es: ", data);
       setProducts([...products, data]);
       setProductErrors([]);
+      return data;
     } catch (error) {
       console.error("Error creating product:", error);
       setProductErrors(error.response?.data?.message || "Error creating product");
@@ -88,7 +91,8 @@ export const ProductProvider = ({ children }) => {
         createProduct,
         updateProduct,
         deleteProduct,
-        setProductErrors
+        setProductErrors,
+        setProducts
       }}
     >
       {children}
