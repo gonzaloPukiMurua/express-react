@@ -121,12 +121,19 @@ export function ProductFormPage() {
         setId(productId);
         setProducts((prev) => [...prev, createdProduct]);
       } else {
-        await updateProduct(productId, product);
+        console.log("Como hay id, se actualiza el producto.");
+        console.log(product)
+        console.log("Id y datos del form: ", productId, product)
+        const { id, ...productData } = product;
+        console.log("ProducData: ",productData)
+        const updatedProduct = await updateProduct(productId, productData);
+        console.log("Este es el producto actualizado: ", updatedProduct);
       }
 
       if (imageFile) {
-        console.log("Esta es la iamgen cargada: ",imageFile)
-        await uploadImage(imageFile, productId);
+        console.log("Esta es la imagen cargada: ",imageFile)
+        const imageSavingResponse = await uploadImage(imageFile, productId);
+        console.log("Respuesta del servidor: ", imageSavingResponse)
       }
 
       navigate("/products");

@@ -37,7 +37,7 @@ const ProductRow = styled.div`
 const Button = styled.button`
   margin: 0 5px;
   padding: 5px 10px;
-  background-color: ${(props) => (props.danger ? "#ff4d4d" : "#535bf2")};
+  background-color: ${(props) => (props.$danger ? "#ff4d4d" : "#535bf2")}; /* Cambia danger a $danger */
   color: white;
   border: none;
   border-radius: 5px;
@@ -73,7 +73,7 @@ export function ProductsPage() {
           <span>Stock: {product.stock}</span>
           <div>
             <Button onClick={() => navigate(`/update-product/${product.id}`)}>Editar</Button>
-            <Button danger onClick={() => handleDelete(product.id)}>Eliminar</Button>
+            <Button $danger onClick={() => handleDelete(product.id)}>Eliminar</Button>
           </div>
         </ProductRow>
       ))}

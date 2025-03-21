@@ -59,7 +59,9 @@ export const ProductProvider = ({ children }) => {
 
   const updateProduct = async (id, updatedProduct) => {
     try {
+      console.log("Estoy en context product updateProduct id y datos son: ", id, updatedProduct);
       const { data } = await updateProductRequest(id, updatedProduct);
+      console.log("La data recibida es: ", data);
       setProducts((prevProducts) =>
         prevProducts.map((product) => (product.id === id ? data : product))
       );
